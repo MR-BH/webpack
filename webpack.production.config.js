@@ -1,0 +1,83 @@
+var webpack = require('webpack')
+var path = require('path');
+var HtmlwebpackPlugin = require('html-webpack-plugin');
+//定义文件夹路径
+var ROOT_PATH = path.resolve(__dirname);
+var APP_PATH = path.resolve(ROOT_PATH, 'app');
+var BUILD_PATH = path.resolve(ROOT_PATH, 'build');
+var TEM_PATH = path.resolve(ROOT_PATH, 'templates');
+
+module.exports = {
+    //项目文件夹，默认index.js
+    entry: {
+        app: path.resolve(APP_PATH, 'index.js'),
+        mobile: path.resolve(APP_PATH, 'mobile.js'),
+        vendors: ['jquery', 'moment']
+    },
+    //输出文件名
+    output: {
+        path: BUILD_PATH,
+        filename: '[name].[hash].js'
+    },
+    module: {
+        preLoaders: [
+            {
+                test: /\.jsx?$/,
+                include: APP_PATH,
+                loader: 'jshint-loader'
+            }
+        ],
+        loaders: [
+            {
+                //匹配文件正则
+                test: /\.css$/,
+                //处理这些文件的loader，处理顺序为从右到左
+                loaders: ['style', 'css?sourceMap'],
+                include: APP_PATH
+            },
+            {
+                //匹配文件正则
+                test: /\.scss$/,
+                //处理这些文件的loader，处理顺序为从右到左
+                loaders: ['style', 'css?sourceMap', 'sass?sourceMap'],
+                include: APP_PATH
+            },
+            {
+                test: /\.(png|jpg)$/,
+                loader: 'url?limit=4000000'
+            },
+            {
+                test: /\.jsx?$/,
+                loader: 'babel',
+                include: APP_PATH,
+                query: {
+                    presets: ['es2015']
+                }
+            }
+        ]
+    },
+    //插件
+    plugins: [
+        new webpack.optimize.UglifyJsPlugin({minimize: true}),
+        // new webpack.optimize.CommonsChunkPlugin('vendors','vendors.js'),
+        new HtmlwebpackPlugin({
+            title: 'Hello World app',
+            template: path.resolve(TEM_PATH, 'index.html'),
+            filename: 'index.html',
+            chunks: ['app', 'vendors'],
+            inject: 'body'
+        }),
+        new HtmlwebpackPlugin({
+            title: 'Hello Mobile app',
+            template: path.resolve(TEM_PATH, 'mobile.html'),
+            filename: 'mobile.html',
+            chunks: ['mobile', 'vendors'],
+            inject: 'body'
+        }),
+        new webpack.ProvidePlugin({
+            $: 'jquery',
+            jQuery: 'jquery',
+            "window.jQuery": 'jquery'
+        })
+    ]
+};
